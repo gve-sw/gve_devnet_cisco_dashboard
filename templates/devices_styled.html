@@ -1,0 +1,230 @@
+{% extends "masterPage.html" %}
+{% block head%}
+<style>
+    .panel-outline {
+        border: 3px solid var(--cui-theme-info-lighter) !important;
+        border-radius: 5px;
+    }
+</style>
+{% endblock %}
+{% block javascript %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const panels = document.getElementsByClassName('clickable-panel');
+        const deviceRows = document.getElementsByClassName('device-row');
+
+
+        for (let panel of panels) {
+            panel.addEventListener('click', function(event) {
+                event.stopPropagation();
+                const targetPanel = event.target.closest('.clickable-panel');
+                toggleHighlight(targetPanel);
+
+                // If the clicked panel is a child panel, toggle the highlight of the parent panel too
+                const parentPanel = targetPanel.parentElement.closest('.clickable-panel');
+                if (parentPanel) {
+                    parentPanel.classList.add('panel-outline');                }
+            });
+        }
+
+        const routersPanel = document.querySelector('#network_stats > .clickable-panel:nth-child(1)');
+        routersPanel.addEventListener('click', function() {
+            filterTableRows('Router');
+        });
+
+        const switchesPanel = document.querySelector('#network_stats > .clickable-panel:nth-child(2)');
+        switchesPanel.addEventListener('click', function() {
+            filterTableRows('Switch');
+        });
+
+        const firewallsPanel = document.querySelector('#network_stats > .clickable-panel:nth-child(3)');
+        firewallsPanel.addEventListener('click', function() {
+            filterTableRows('Firewall');
+        });
+
+        const serversPanel = document.querySelector('#network_stats > .clickable-panel:nth-child(4)');
+        serversPanel.addEventListener('click', function() {
+            filterTableRows('Server');
+        });
+
+        const merakiPanel = document.querySelector('#network_stats > .clickable-panel:nth-child(5)');
+        merakiPanel.addEventListener('click', function() {
+            filterTableRows('Meraki');
+        });
+
+        function filterTableRows() {
+            const routerSelected = routersPanel.classList.contains('panel-outline');
+            const switchSelected = switchesPanel.classList.contains('panel-outline');
+            const firewallSelected = firewallsPanel.classList.contains('panel-outline');
+            const serverSelected = serversPanel.classList.contains('panel-outline');
+            const merakiSelected = merakiPanel.classList.contains('panel-outline');
+
+
+            const onlineSelected = routersPanel.querySelector('#routers_online').classList.contains('panel-outline') ||
+                switchesPanel.querySelector('#switches_online').classList.contains('panel-outline') ||
+                firewallsPanel.querySelector('#firewalls_online').classList.contains('panel-outline') ||
+                serversPanel.querySelector('#servers_online').classList.contains('panel-outline') ||
+                merakiPanel.querySelector('#meraki_online').classList.contains('panel-outline');
+
+            const offlineSelected = routersPanel.querySelector('#routers_offline').classList.contains('panel-outline') ||
+                switchesPanel.querySelector('#switches_offline').classList.contains('panel-outline') ||
+                firewallsPanel.querySelector('#firewalls_offline').classList.contains('panel-outline') ||
+                serversPanel.querySelector('#servers_offline').classList.contains('panel-outline') ||
+                merakiPanel.querySelector('#meraki_offline').classList.contains('panel-outline');
+
+
+            for (let row of deviceRows) {
+                const isOnline = row.querySelector('.badge--success') !== null;
+                const isOffline = row.querySelector('.badge--danger') !== null;
+
+                if (
+                    (routerSelected && row.classList.contains('Routers')) ||
+                    (switchSelected && row.classList.contains('Switches')) ||
+                    (firewallSelected && row.classList.contains('Firewalls')) ||
+                    (serverSelected && row.classList.contains('Servers') || row.classList.contains('HyperFlex')) ||
+                    (merakiSelected && row.classList.contains('Meraki')) ||
+                    (!routerSelected && !switchSelected && !firewallSelected && !serverSelected &&!merakiSelected)
+                ) {
+                    if ((onlineSelected && isOnline) || (offlineSelected && isOffline) || (!onlineSelected && !offlineSelected)) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                } else {
+                    row.style.display = 'none';
+                }
+            }
+        }
+    });
+
+    function toggleHighlight(panel) {
+        panel.classList.toggle('panel-outline');
+    }
+</script>
+{% endblock %}
+
+
+{% block content %}
+<div class="section">
+    <div class="section" id="network_stats" style="display: flex; justify-content: center">
+        <div class="panel panel--loose panel--raised base-margin-bottom clickable-panel"  style="flex: 1; margin-right: 1%; max-width: 18%; border-radius: 5px;">
+                        <h2 class="subtitle">Routers</h2>
+                        <hr>
+                        <div id="routers_online" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #dfd; border-radius: 10px; width: 60%;margin-left: auto; margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ routers.online }}</span><span>Online</span></div>
+                        </div>
+                         <div id="routers_offline" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #fd9995; border-radius: 10px; width: 60%;margin-left: auto;margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ routers.offline}}</span><span>Offline</span></div>
+                        </div>
+        </div>
+        <div class="panel panel--loose panel--raised base-margin-bottom clickable-panel"  style="flex: 1; margin-right: 1%; max-width: 18%; border-radius: 5px;">
+                        <h2 class="subtitle">Switches</h2>
+                        <hr>
+                        <div id="switches_online" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #dfd; border-radius: 10px; width: 60%;margin-left: auto; margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ switches.online }}</span><span>Online</span></div>
+                        </div>
+                         <div id="switches_offline" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #fd9995; border-radius: 10px; width: 60%;margin-left: auto;margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ switches.offline}}</span><span>Offline</span></div>
+                        </div>
+        </div>
+        <div class="panel panel--loose panel--raised base-margin-bottom clickable-panel"  style="flex: 1; margin-right: 1%; max-width: 18%; border-radius: 5px;">
+                        <h2 class="subtitle">Firewalls</h2>
+                        <hr>
+                        <div id="firewalls_online" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #dfd; border-radius: 10px; width: 60%;margin-left: auto; margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ firewalls.online }}</span><span>Online</span></div>
+                        </div>
+                         <div id="firewalls_offline" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #fd9995; border-radius: 10px; width: 60%;margin-left: auto;margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ firewalls.offline}}</span><span>Offline</span></div>
+                        </div>
+        </div>
+        <div class="panel panel--loose panel--raised base-margin-bottom clickable-panel"  style="flex: 1; margin-right: 1%; max-width: 18%; border-radius: 5px;">
+                        <h2 class="subtitle">Servers</h2>
+                        <hr>
+                        <div id="servers_online" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #dfd; border-radius: 10px; width: 60%;margin-left: auto; margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ servers.online }}</span><span>Online</span></div>
+                        </div>
+                         <div id="servers_offline" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #fd9995; border-radius: 10px; width: 60%;margin-left: auto;margin-right: auto;">
+                            <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ servers.offline}}</span><span>Offline</span></div>
+                        </div>
+        </div>
+        <div class="panel panel--loose panel--raised base-margin-bottom clickable-panel"  style="flex: 1; margin-right: 1%; max-width: 18%; border-radius: 5px;">
+            <h2 class="subtitle">Meraki</h2>
+            <hr>
+            <div id="meraki_online" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #dfd; border-radius: 10px; width: 60%;margin-left: auto; margin-right: auto;">
+                <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ meraki.online }}</span><span>Online</span></div>
+            </div>
+             <div id="meraki_offline" class="base-margin-bottom panel panel--loose panel--raised clickable-panel" style="width: 100%; background-color: #fd9995; border-radius: 10px; width: 60%;margin-left: auto;margin-right: auto;">
+                <div style="text-align: center; font-family: CiscoSans; font-weight: lighter; font-size: large;"><span style="margin-right: 5%;">{{ meraki.offline}}</span><span>Offline</span></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="section">
+    <div class="panel panel--loose panel--raised base-margin-bottom"  style="border-radius: 5px;">
+        <h2 class="subtitle" style="margin-bottom:3%">ThousandEyes</h2>
+
+        <!-- Add chart container -->
+        <div class="panel panel--loose panel--raised base-margin-bottom"  style="border-radius: 5px; height:300px;">
+            <iframe frameborder="0" width="100%" height="100%" src="{{ te_embed_url }}"></iframe>
+        </div>
+    </div>
+</div>
+
+    <div class="flex-center-vertical">
+        <h1>My Devices</h1>
+    </div>
+
+<div class="section">
+    <div class="responsive-table">
+        <table class="table table--lined table--selectable table">
+            <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Device</th>
+                    <th>Family</th>
+                    <th>Health</th>
+                    <th>Management IP Address</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr class="device-row {{ device.family }}">
+                    {% if device.reachabilityStatus == 'Reachable' %}
+                    <td class="text-center"><span class="badge badge--success"></span></td>
+                    {% else %}
+                    <td class="text-center"><span class="badge badge--danger"></span></td>
+                    {% endif %}
+                    <td>{{ device.hostname }}</td>
+                    <td>{{ device.family }}</td>
+                    {% if device.url == "#" %}
+                        <td><a href="{{ device.url }}" onclick="return false;">
+                                <div style="height:100%;width:100%">
+                                  {{ device.health }}
+                                </div>
+                            </a></td>
+                        <td>{{ device.managementIpAddress }}</td>
+                    {% else %}
+                        <td><a href="{{ device.url }}" target=”_blank”>
+                                <div style="height:100%;width:100%">
+                                  {{ device.health }}
+                                </div>
+                            </a></td>
+                        <td>{{ device.managementIpAddress }}</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="display: flex; justify-content: center;">
+        <ul class="pagination">
+            {% for i in range(1, total_pages + 1) %}
+            <li {% if i == current_page %}class="active"{% endif %}>
+                <a href="{{ url_for('list_devices', page=i, per_page=per_page) }}">{{ i }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
